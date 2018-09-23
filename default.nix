@@ -10,7 +10,7 @@ let
       echo cc=$CC
 
       cd $src
-      $CC -O2 -Werror $CFLAGS -o "$out/bin/${output}" "${input}"
+      $CC -O3 -Werror $CFLAGS -o "$out/bin/${output}" "${input}"
     '';
   } // args);
 
