@@ -13,10 +13,12 @@ static ColorRGB color_hsv2rgb(ColorHSV c) {
   float s = c.s;
   float v = c.v;
 
-  if(s > 1.0f) s = 1.0f;
-  if(s < 0.0f) s = 0.0f;
-  if(v > 1.0f) v = 1.0f;
-  if(v < 0.0f) v = 0.0f;
+  if(h > 1) h -= (int) h;
+  if(h < 0) h -= (int) h - 1;
+  if(s > 1) s = 1;
+  if(s < 0) s = 0;
+  if(v > 1) v = 1;
+  if(v < 0) v = 0;
 
   ColorRGB rgb;
 
