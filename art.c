@@ -82,44 +82,47 @@ static void art_push_ring(Image *img, int r, int cx, int cy, ColorHSV *src) {
 
 #define MOD(a,b) ((((a)%(b))+(b))%(b))
 
-#define FA_WIDTH     5
-#define FA_COLORS    4
-#define FA_ROUGHNESS 0.01f
+#define FA_WIDTH     2
+#define FA_SMOOTH_STEPS    0
+#define FA_SMOOTH_FACTOR   0.05f
+
+#define FA_CH 2
+#define FA_CS 10
+#define FA_CV 10
 
 static void art_iterate(ColorHSV *dst, int dst_count, ColorHSV *src, int src_count, int r, Rand *gen) {
   for(int i_dst = 0; i_dst < dst_count; ++i_dst) {
     int i_src = i_dst * src_count / dst_count;
 
-    float h = 0, s = 0, v = 0;
     int o = rand_int(gen) % (2*FA_WIDTH + 1) - FA_WIDTH;
+    ColorHSV c = src[(i_src + src_count + o) % src_count];
 
-    h = src[(i_src + src_count + o) % src_count].h;
-    s = src[(i_src + src_count + o) % src_count].s;
-    v = src[(i_src + src_count + o) % src_count].v;
+    if(FA_SMOOTH_STEPS > 0) {
+      c.h *= 1 - FA_SMOOTH_FACTOR;
+      c.s *= 1 - FA_SMOOTH_FACTOR;
+      c.v *= 1 - FA_SMOOTH_FACTOR;
 
-    if(rand_int(gen) % (r*FA_COLORS) == 0) {
-      h = rand_normal(gen);
-      s = rand_normal(gen);
-      v = 1.0f;
+      for(int i = -FA_SMOOTH_STEPS; i <= FA_SMOOTH_STEPS; ++i) {
+        ColorHSV c1 = src[(i_src + src_count + o + i) % src_count];
+        c.h += c1.h * FA_SMOOTH_FACTOR / (2*FA_SMOOTH_STEPS+1);
+        c.s += c1.s * FA_SMOOTH_FACTOR / (2*FA_SMOOTH_STEPS+1);
+        c.v += c1.v * FA_SMOOTH_FACTOR / (2*FA_SMOOTH_STEPS+1);
+      }
     }
 
-#if 1
-    h += FA_ROUGHNESS * rand_uniform(gen);
-    v += FA_ROUGHNESS * rand_uniform(gen);
-    s += FA_ROUGHNESS * rand_uniform(gen);
-#endif
+    c.h += 0.001f * rand_uniform(gen) * FA_CH;
+    c.s += 0.001f * rand_uniform(gen) * FA_CS;
+    c.v += 0.001f * rand_uniform(gen) * FA_CV;
 
-    dst[i_dst].s = s;
-    dst[i_dst].v = v;
-    dst[i_dst].h = h;
+    dst[i_dst] = c;
   }
 }
 
-static size_t art_size(int width, int height) {
-  return MAX(width, height) * 8 * 2 * sizeof(ColorHSV);
+size_t art_size(Image *img) {
+  return MAX(img->width, img->height) * 8 * 2 * sizeof(ColorHSV);
 }
 
-static void art_generate(Image *img, Platform *p) {
+void art_generate(Image *img, Platform *p) {
   int r_max = MAX(img->width, img->height);
   ColorHSV *src = mem_alloc(&p->mem, r_max*8*sizeof(*src));
   ColorHSV *dst = mem_alloc(&p->mem, r_max*8*sizeof(*dst));
@@ -133,8 +136,8 @@ static void art_generate(Image *img, Platform *p) {
 #endif
 
   dst[0].h = rand_normal(&p->gen);
-  dst[0].s = rand_normal(&p->gen);
-  dst[0].v = 1.0f;
+  dst[0].s = 0.8f;
+  dst[0].v = 0.8f;
 
   art_push_ring(img, 0, cx, cy, dst);
   art_iterate(src, 8, dst, 1, 1, &p->gen);

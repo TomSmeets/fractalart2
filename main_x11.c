@@ -42,7 +42,7 @@ int main(int argc, const char *argv[]) {
     .px = px,
   };
 
-  size_t mem_size = art_size(width, height);
+  size_t mem_size = art_size(&img);
   Platform p = {
     .gen = {
       .max = RAND_MAX,
