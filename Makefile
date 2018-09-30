@@ -2,11 +2,14 @@
 
 all: art.so main debug
 
-art.so: art.c
-	cc -o art.so -ggdb -O2 -shared -fPIC $<
+build:
+	mkdir build
 
-debug: main_debug.c
-	cc -o $@ -ggdb -O2 $< -lX11 -Wall -ldl
+art.so: art.c build
+	cc -o build/$@ -nostdlib -ggdb -O2 -shared -fPIC $<
 
-main: main_x11.c
-	cc -o $@ -ggdb -O2 $< -lX11 -Wall
+debug: main_debug.c build
+	cc -o build/$@ -ggdb -O2 $< -lX11 -Wall -ldl
+
+main: main_x11.c build
+	cc -o build/$@ -ggdb -O2 $< -lX11 -Wall

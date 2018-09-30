@@ -8,7 +8,8 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <assert.h>
+
+#define assert(x) if(!(x)) *((int *)0) = 0
 
 typedef struct {
   int width;
